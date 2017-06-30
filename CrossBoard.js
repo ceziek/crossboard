@@ -5,9 +5,6 @@ class CrossBoard {
     this.board = [];
     this.emptyTile = '_';
     this.wordToMatch = '';
-
-    this.generate();
-    this.output();
   }
 
   getRandomWord() {
@@ -163,7 +160,7 @@ class CrossBoard {
     do {
       let buffer = [];
 
-      this.words.forEach((word, index) => {
+      this.words.forEach((word) => {
         // const randomIndex = Math.floor(Math.random() * this.words.length);
         // this.wordToMatch = this.words[randomIndex];
 
@@ -215,3 +212,6 @@ let words =
 
 
 let crossBoard = new CrossBoard(words);
+
+crossBoard.generate();
+crossBoard.output();
