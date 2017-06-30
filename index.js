@@ -167,7 +167,7 @@ function start() {
 
     wordsToMatch.forEach((word) => {
       if (!checkVertical(board, word)) {
-        //board = rotate(board);
+        //board = turnRight(board);
         if (!checkVertical(board, word)) {
           done = false;
           buffer.push(word);

@@ -1,33 +1,33 @@
 class CrossBoard {
+  constructor(words) {
+    this.words = words;
 
-  constructor() {
     this.board = [];
-
+    this.emptyTile = '_';
     this.wordToMatch = '';
-    this.words =
-      ['mama', 'antylopa', 'akronim', 'beata', 'kartofel', 'opale', 'samochod', 'fory', 'amfora', 'raki', 'ptak', 'kapiszon',
-        'tata', 'bydlo', 'kicz', 'joanna', 'ziemniak', 'polska', 'bartek', 'katedra', 'smerf', 'osilek', 'goniec', 'zara'];
-
-    let randomIndex = Math.floor(Math.random() * 5);
-
-    this.board[0] = [...this.words[randomIndex]];
-
-    this.machesFailed = 0;
-    this.matchedPosition = {};
 
     this.generate();
+    this.output();
+  }
 
+  getRandomWord() {
+    let randomIndex = Math.floor(Math.random() * this.words.length);
+
+    this.board[0] = [...this.words[randomIndex]];
+    this.words.splice(randomIndex, 1);
   }
 
   matchCharacter() {
     this.matchedPosition = {};
-    let charsToMatch = [...this.wordToMatch];
 
     return this.board.some((row, posY) => {
-
       return row.some((tile, posX) => {
 
-        return charsToMatch.some((char, index) => {
+        if (tile === this.emptyTile) {
+          return false;
+        }
+
+        return [...this.wordToMatch].some((char, index) => {
 
           if (char === tile) {
             this.matchedPosition = {
@@ -38,36 +38,14 @@ class CrossBoard {
               posX: posX
             };
 
-            return true;
+            return this.checkSurroundings();
           }
         })
       })
     });
   }
 
-  writeBoardVertical() {
-
-    let firstElementIndex = this.matchedPosition.posY - this.matchedPosition.matchedWordIndex;
-    let lastElementIndex = this.matchedPosition.posY + this.wordToMatch.length - 1 - this.matchedPosition.matchedWordIndex;
-
-    while (firstElementIndex < 0) {
-      this.board.unshift(new Array(this.board[0].length).fill(' '));
-      firstElementIndex++;
-      lastElementIndex++;
-      this.matchedPosition.posY++;
-    }
-
-    while (lastElementIndex > this.board.length - 1) {
-      this.board.push(new Array(this.board[0].length).fill(' '));
-    }
-
-    [...this.wordToMatch].forEach((char, index) => {
-      this.board[firstElementIndex + index][this.matchedPosition.posX] = char;
-    });
-  }
-
   checkSurroundings() {
-    let chars = [...this.wordToMatch];
     let isValid = true;
 
     const firstElementPosition = {
@@ -76,14 +54,14 @@ class CrossBoard {
     };
 
     const lastElementPosition = {
-      posY: firstElementPosition.posY + chars.length - 1,
+      posY: firstElementPosition.posY + this.wordToMatch.length - 1,
       posX: firstElementPosition.posX
-    }
+    };
 
     if (
       this.board[firstElementPosition.posY - 1] &&
       this.board[firstElementPosition.posY - 1][firstElementPosition.posX] &&
-      this.board[firstElementPosition.posY - 1][firstElementPosition.posX] !== ' '
+      this.board[firstElementPosition.posY - 1][firstElementPosition.posX] !== this.emptyTile
     ) {
       isValid = false;
     }
@@ -91,12 +69,12 @@ class CrossBoard {
     if (
       this.board[lastElementPosition.posY + 1] &&
       this.board[lastElementPosition.posY + 1][lastElementPosition.posX] &&
-      this.board[lastElementPosition.posY + 1][lastElementPosition.posX] !== ' '
+      this.board[lastElementPosition.posY + 1][lastElementPosition.posX] !== this.emptyTile
     ) {
       isValid = false;
     }
 
-    chars.forEach((char, index) => {
+    [...this.wordToMatch].forEach((char, index) => {
       if (
         this.board[firstElementPosition.posY + index] &&
         this.matchedPosition.matchedWordIndex !== index &&
@@ -104,14 +82,14 @@ class CrossBoard {
       ) {
         if (
           this.board[firstElementPosition.posY + index][firstElementPosition.posX - 1] &&
-          this.board[firstElementPosition.posY + index][firstElementPosition.posX - 1] !== ' '
+          this.board[firstElementPosition.posY + index][firstElementPosition.posX - 1] !== this.emptyTile
         ) {
           isValid = false;
         }
 
         if (
           this.board[firstElementPosition.posY + index][firstElementPosition.posX + 1] &&
-          this.board[firstElementPosition.posY + index][firstElementPosition.posX + 1] !== ' '
+          this.board[firstElementPosition.posY + index][firstElementPosition.posX + 1] !== this.emptyTile
         ) {
           isValid = false;
         }
@@ -121,10 +99,32 @@ class CrossBoard {
     return isValid;
   }
 
-  rotate() {
-    let rotatedBoard = [];
+  writeBoard() {
+
+    let firstElementIndex = this.matchedPosition.posY - this.matchedPosition.matchedWordIndex;
+    let lastElementIndex = this.matchedPosition.posY + this.wordToMatch.length - 1 - this.matchedPosition.matchedWordIndex;
+
+    while (firstElementIndex < 0) {
+      this.board.unshift(new Array(this.board[0].length).fill(this.emptyTile));
+      firstElementIndex++;
+      lastElementIndex++;
+      this.matchedPosition.posY++;
+    }
+
+    while (lastElementIndex > this.board.length - 1) {
+      this.board.push(new Array(this.board[0].length).fill(this.emptyTile));
+    }
+
+    [...this.wordToMatch].forEach((char, index) => {
+      this.board[firstElementIndex + index][this.matchedPosition.posX] = char;
+    });
+  }
+
+  turnRight() {
     const height = this.board.length;
     const width = this.board[0].length;
+
+    let rotatedBoard = [];
 
     for (let i = 0; i < width; i++) {
       rotatedBoard[i] = [];
@@ -132,8 +132,25 @@ class CrossBoard {
       for (let j = 0; j < height; j++) {
         rotatedBoard[i][j] = this.board[j][i];
       }
+      rotatedBoard[i] = rotatedBoard[i].reverse();
     }
 
+    this.board = rotatedBoard;
+  }
+
+  turnLeft() {
+    const height = this.board.length;
+    const width = this.board[0].length;
+
+    let rotatedBoard = [];
+
+    for (let i = 0; i < width; i++) {
+      rotatedBoard[i] = [];
+
+      for (let j = 0; j < height; j++) {
+        rotatedBoard[i][j] = this.board[j][width - 1 - i];
+      }
+    }
 
     this.board = rotatedBoard;
   }
@@ -141,30 +158,32 @@ class CrossBoard {
   generate() {
     let done = false;
 
+    this.getRandomWord();
+
     do {
       let buffer = [];
 
       this.words.forEach((word, index) => {
-        const randomIndex = Math.floor(Math.random() * this.words.length);
-        this.wordToMatch = this.words[randomIndex];
+        // const randomIndex = Math.floor(Math.random() * this.words.length);
+        // this.wordToMatch = this.words[randomIndex];
+
+        this.wordToMatch = word;
 
         const isMatched = this.matchCharacter();
-        const isValid = this.checkSurroundings();
 
-
-
-        if (isMatched && isValid) {
-          this.writeBoardVertical();
-          this.rotate();
+        if (isMatched) {
+          this.writeBoard();
         } else {
-          this.rotate();
+          this.turnRight();
 
-          if (isMatched && isValid) {
-            this.writeBoardVertical();
-            this.rotate();
+          const isMatchedRotated = this.matchCharacter();
+
+          if (isMatchedRotated) {
+            this.writeBoard();
+            this.turnLeft();
           } else {
-            this.machesFailed++;
             buffer.push(word);
+            this.turnLeft();
           }
         }
 
@@ -172,13 +191,14 @@ class CrossBoard {
 
       if (buffer.length && buffer.length !== this.words.length) {
         this.words = [...buffer];
+        console.log(this.words.toString(), 'Buffer')
       } else {
-        console.log('Niedopasowane : ', this.words.length);
+        console.log('Niedopasowane : ', buffer.length);
+        console.log('Niedopasowane : ', buffer);
         done = true;
       }
-    } while (!done)
+    } while (!done);
 
-    this.output();
   }
 
   output() {
@@ -188,5 +208,10 @@ class CrossBoard {
   }
 }
 
+let words =
+  ['mama', 'antylopa', 'akronim', 'beata', 'kartofel', 'opale', 'samochod', 'fory', 'zamachowiec', 'komisja',
+    'sciana', 'zupa', 'siusiak', 'kamasutra', 'konstanty', 'motor', 'prezydent', 'telewizja', 'kontrola',
+    'grot', 'encyklopedia', 'gwint', 'trampek', 'palac', 'ksiazka'];
 
-let crossBoard = new CrossBoard();
+
+let crossBoard = new CrossBoard(words);
