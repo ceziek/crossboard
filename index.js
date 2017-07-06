@@ -1,9 +1,11 @@
 function renderBoard() {
-  let words =
+  let wordsArray =
     ['mama', 'antylopa', 'akronim', 'beata', 'kartofel', 'opale', 'samochod', 'fory', 'zamachowiec', 'komisja',
       'sciana', 'zupa', 'siusiak', 'kamasutra', 'konstanty', 'motor', 'prezydent', 'telewizja', 'kontrola',
-      'grot', 'encyklopedia', 'gwint', 'trampek', 'palac', 'ksiazka', 'pasztet', 'kawa', 'portfel', 'eklerka', 'batuta'];
+      'grot', 'encyklopedia', 'gwint', 'trampek', 'palac', 'ksiazka', 'pasztet', 'kawa', 'portfel', 'eklerka', 'batuta',
+  'kafka', 'syrop', 'pakistan', 'taczpad', 'programowanie', 'niepierdol', 'chujowytekst', 'sikiweroniki', 'koka'];
 
+  let words = ['mama', 'antylopa', 'akronim', 'beata', 'kartofel', 'opale', 'samochod', 'fory', 'zamachowiec', 'komisja'];
   let crossBoard = new CrossBoard(words);
 
   crossBoard.generate();

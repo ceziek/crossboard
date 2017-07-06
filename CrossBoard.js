@@ -5,6 +5,14 @@ class CrossBoard {
     this.board = [];
     this.emptyTile = '_';
     this.wordToMatch = '';
+
+    this.matchedCharProperties = {
+      matchedCharIndex: null,
+      matchedWordLength: null,
+      boardHeight: null,
+      posY: null,
+      posX: null
+    };
   }
 
   getRandomWord() {
@@ -15,7 +23,7 @@ class CrossBoard {
   }
 
   matchCharacter() {
-    this.matchedPosition = {};
+    this.matchedCharProperties = {};
 
     return this.board.some((row, posY) => {
       return row.some((tile, posX) => {
@@ -27,10 +35,10 @@ class CrossBoard {
         return [...this.wordToMatch].some((char, index) => {
 
           if (char === tile) {
-            this.matchedPosition = {
-              matchedWordIndex: index,
+            this.matchedCharProperties = {
+              matchedCharIndex: index,
               matchedWordLength: this.wordToMatch.length,
-              boardLength: this.board.length,
+              boardHeight: this.board.length,
               posY: posY,
               posX: posX
             };
@@ -46,8 +54,97 @@ class CrossBoard {
     let isValid = true;
 
     const firstElementPosition = {
-      posY: this.matchedPosition.posY - this.matchedPosition.matchedWordIndex,
-      posX: this.matchedPosition.posX
+      posY: this.matchedCharProperties.posY - this.matchedCharProperties.matchedCharIndex,
+      posX: this.matchedCharProperties.posX
+    };
+
+    const lastElementPosition = {
+      posY: firstElementPosition.posY + this.wordToMatch.length - 1,
+      posX: firstElementPosition.posX
+    };
+
+    if (
+      this.board[firstElementPosition.posY - 1] &&
+      this.board[firstElementPosition.posY - 1][firstElementPosition.posX] &&
+      this.board[firstElementPosition.posY - 1][firstElementPosition.posX] !== this.emptyTile
+    ) {
+      isValid = false;
+    }
+
+    if (
+      this.board[lastElementPosition.posY + 1] &&
+      this.board[lastElementPosition.posY + 1][lastElementPosition.posX] &&
+      this.board[lastElementPosition.posY + 1][lastElementPosition.posX] !== this.emptyTile
+    ) {
+      isValid = false;
+    }
+
+    [...this.wordToMatch].forEach((char, index) => {
+      if (
+        this.matchedCharProperties.matchedCharIndex !== index &&
+        this.board[firstElementPosition.posY + index] &&
+        this.board[firstElementPosition.posY + index][firstElementPosition.posX - 1] &&
+        this.board[firstElementPosition.posY + index][firstElementPosition.posX - 1] !== this.emptyTile
+      ) {
+        isValid = false;
+      }
+
+      if (
+        this.matchedCharProperties.matchedCharIndex !== index &&
+        this.board[firstElementPosition.posY + index] &&
+        this.board[firstElementPosition.posY + index][firstElementPosition.posX + 1] &&
+        this.board[firstElementPosition.posY + index][firstElementPosition.posX + 1] !== this.emptyTile
+      ) {
+        isValid = false;
+      }
+
+      if (
+        (
+          this.matchedCharProperties.matchedCharIndex === index &&
+          this.board[firstElementPosition.posY + index + 1] &&
+          this.board[firstElementPosition.posY + index + 1][firstElementPosition.posX] &&
+          this.board[firstElementPosition.posY + index + 1][firstElementPosition.posX] !== this.emptyTile
+        )
+        ||
+        (
+          this.matchedCharProperties.matchedCharIndex === index &&
+          this.board[firstElementPosition.posY + index - 1] &&
+          this.board[firstElementPosition.posY + index - 1][firstElementPosition.posX] &&
+          this.board[firstElementPosition.posY + index - 1][firstElementPosition.posX] !== this.emptyTile
+        )
+      ) {
+        isValid = false;
+      }
+
+      if (
+        (
+          this.matchedCharProperties.matchedCharIndex === index &&
+          this.board[firstElementPosition.posY + index] &&
+          this.board[firstElementPosition.posY + index][firstElementPosition.posX - 1] &&
+          this.board[firstElementPosition.posY + index][firstElementPosition.posX - 1] === this.emptyTile
+        )
+        ||
+        (
+          this.matchedCharProperties.matchedCharIndex === index &&
+          this.board[firstElementPosition.posY + index] &&
+          this.board[firstElementPosition.posY + index][firstElementPosition.posX + 1] &&
+          this.board[firstElementPosition.posY + index][firstElementPosition.posX + 1] === this.emptyTile
+        )
+      ) {
+        isValid = false;
+      }
+    });
+
+    return isValid;
+
+  }
+
+  checkWordSurroundings2() {
+    let isValid = true;
+
+    const firstElementPosition = {
+      posY: this.matchedCharProperties.posY - this.matchedCharProperties.matchedCharIndex,
+      posX: this.matchedCharProperties.posX
     };
 
     const lastElementPosition = {
@@ -74,7 +171,7 @@ class CrossBoard {
     [...this.wordToMatch].forEach((char, index) => {
       if (
         this.board[firstElementPosition.posY + index] &&
-        this.matchedPosition.matchedWordIndex !== index &&
+        this.matchedCharProperties.matchedCharIndex !== index &&
         char !== this.board[firstElementPosition.posY + index][firstElementPosition.posX]
       ) {
         if (
@@ -97,8 +194,8 @@ class CrossBoard {
   }
 
   writeBoard() {
-    let firstElementIndex = this.matchedPosition.posY - this.matchedPosition.matchedWordIndex;
-    let lastElementIndex = this.matchedPosition.posY + this.wordToMatch.length - 1 - this.matchedPosition.matchedWordIndex;
+    let firstElementIndex = this.matchedCharProperties.posY - this.matchedCharProperties.matchedCharIndex;
+    let lastElementIndex = this.matchedCharProperties.posY + this.wordToMatch.length - 1 - this.matchedCharProperties.matchedCharIndex;
 
     while (firstElementIndex < 0) {
       let emptyArray = new Array(this.board[0].length).fill(this.emptyTile);
@@ -106,7 +203,7 @@ class CrossBoard {
       this.board.unshift(emptyArray);
       firstElementIndex++;
       lastElementIndex++;
-      this.matchedPosition.posY++;
+      this.matchedCharProperties.posY++;
     }
 
     while (lastElementIndex > this.board.length - 1) {
@@ -116,7 +213,7 @@ class CrossBoard {
     }
 
     [...this.wordToMatch].forEach((char, index) => {
-      this.board[firstElementIndex + index][this.matchedPosition.posX] = char;
+      this.board[firstElementIndex + index][this.matchedCharProperties.posX] = char;
     });
 
     console.log(this.wordToMatch);
@@ -125,7 +222,7 @@ class CrossBoard {
 
     console.log('----------------')
 
-    this.matchedPosition = {};
+    this.matchedCharProperties = {};
   }
 
   turnRight() {
