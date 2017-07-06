@@ -5,7 +5,8 @@ function renderBoard() {
       'grot', 'encyklopedia', 'gwint', 'trampek', 'palac', 'ksiazka', 'pasztet', 'kawa', 'portfel', 'eklerka', 'batuta',
   'kafka', 'syrop', 'pakistan', 'taczpad', 'programowanie', 'niepierdol', 'chujowytekst', 'sikiweroniki', 'koka'];
 
-  let words = ['mama', 'antylopa', 'akronim', 'beata', 'kartofel', 'opale', 'samochod', 'fory', 'zamachowiec', 'komisja'];
+  let words = ['kamasutra', 'konstanty', 'motor', 'prezydent', 'telewizja', 'kontrola',
+    'grot', 'encyklopedia', 'gwint', 'trampek', 'palac', 'ksiazka', 'pasztet', 'kawa', 'portfel', 'eklerka'];
   let crossBoard = new CrossBoard(words);
 
   crossBoard.generate();
@@ -18,8 +19,9 @@ function renderBoard() {
 
     row.forEach((tile) => {
       let boardTile = document.createElement('SPAN');
-      boardTile.innerHTML = tile === crossBoard.emptyTile ? '' : tile;
-      if (!boardTile.innerHTML) {
+      boardTile.innerHTML = tile.content;
+
+      if (boardTile.innerHTML === crossBoard.emptyTile.content) {
         boardTile.classList.add('empty')
       }
       boardRow.appendChild(boardTile);

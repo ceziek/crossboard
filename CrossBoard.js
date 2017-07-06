@@ -1,9 +1,17 @@
+class Tile {
+  constructor() {
+    this.content = '_';
+    this.fillOrientation = '';
+    this.fullFilled = false;
+  }
+}
+
 class CrossBoard {
   constructor(words) {
     this.words = words;
 
     this.board = [];
-    this.emptyTile = '_';
+    this.emptyTile = new Tile();
     this.wordToMatch = '';
 
     this.matchedCharProperties = {
@@ -13,12 +21,26 @@ class CrossBoard {
       posY: null,
       posX: null
     };
+
+    this.vertical = 'vertical';
+    this.horizontal = 'horizontal';
+
+    this.orientation = this.vertical;
   }
 
   getRandomWord() {
-    let randomIndex = Math.floor(Math.random() * this.words.length);
+    const randomIndex = Math.floor(Math.random() * this.words.length);
+    const wordArray = [...this.words[randomIndex]];
 
-    this.board[0] = [...this.words[randomIndex]];
+    this.board[0] = wordArray.map((char) => {
+      let tile = new Tile();
+
+      tile.fillOrientation = this.horizontal;
+      tile.content = char;
+
+      return tile;
+    });
+
     this.words.splice(randomIndex, 1);
   }
 
@@ -28,14 +50,19 @@ class CrossBoard {
     return this.board.some((row, posY) => {
       return row.some((tile, posX) => {
 
-        if (tile === this.emptyTile) {
+        if (
+          tile.fullFilled ||
+          tile.content === this.emptyTile.content ||
+          tile.fillOrientation === this.orientation
+        ) {
           return false;
         }
 
         return [...this.wordToMatch].some((char, index) => {
 
-          if (char === tile) {
+          if (tile.content === char) {
             this.matchedCharProperties = {
+              matchedChar: char,
               matchedCharIndex: index,
               matchedWordLength: this.wordToMatch.length,
               boardHeight: this.board.length,
@@ -53,137 +80,79 @@ class CrossBoard {
   checkWordSurroundings() {
     let isValid = true;
 
-    const firstElementPosition = {
+    const firstCharPosition = {
       posY: this.matchedCharProperties.posY - this.matchedCharProperties.matchedCharIndex,
       posX: this.matchedCharProperties.posX
     };
 
-    const lastElementPosition = {
-      posY: firstElementPosition.posY + this.wordToMatch.length - 1,
-      posX: firstElementPosition.posX
+    const lastCharPosition = {
+      posY: firstCharPosition.posY + this.wordToMatch.length - 1,
+      posX: firstCharPosition.posX
     };
 
+
     if (
-      this.board[firstElementPosition.posY - 1] &&
-      this.board[firstElementPosition.posY - 1][firstElementPosition.posX] &&
-      this.board[firstElementPosition.posY - 1][firstElementPosition.posX] !== this.emptyTile
+      this.board[firstCharPosition.posY - 1] &&
+      this.board[firstCharPosition.posY - 1][firstCharPosition.posX] &&
+      this.board[firstCharPosition.posY - 1][firstCharPosition.posX].content !== this.emptyTile.content
     ) {
       isValid = false;
     }
 
     if (
-      this.board[lastElementPosition.posY + 1] &&
-      this.board[lastElementPosition.posY + 1][lastElementPosition.posX] &&
-      this.board[lastElementPosition.posY + 1][lastElementPosition.posX] !== this.emptyTile
+      this.board[lastCharPosition.posY + 1] &&
+      this.board[lastCharPosition.posY + 1][lastCharPosition.posX] &&
+      this.board[lastCharPosition.posY + 1][lastCharPosition.posX].content !== this.emptyTile.content
     ) {
       isValid = false;
     }
 
     [...this.wordToMatch].forEach((char, index) => {
-      if (
-        this.matchedCharProperties.matchedCharIndex !== index &&
-        this.board[firstElementPosition.posY + index] &&
-        this.board[firstElementPosition.posY + index][firstElementPosition.posX - 1] &&
-        this.board[firstElementPosition.posY + index][firstElementPosition.posX - 1] !== this.emptyTile
-      ) {
-        isValid = false;
-      }
+      let boardMatchY = firstCharPosition.posY + index;
+      let boardMatchX = firstCharPosition.posX;
 
-      if (
-        this.matchedCharProperties.matchedCharIndex !== index &&
-        this.board[firstElementPosition.posY + index] &&
-        this.board[firstElementPosition.posY + index][firstElementPosition.posX + 1] &&
-        this.board[firstElementPosition.posY + index][firstElementPosition.posX + 1] !== this.emptyTile
-      ) {
-        isValid = false;
-      }
-
-      if (
-        (
-          this.matchedCharProperties.matchedCharIndex === index &&
-          this.board[firstElementPosition.posY + index + 1] &&
-          this.board[firstElementPosition.posY + index + 1][firstElementPosition.posX] &&
-          this.board[firstElementPosition.posY + index + 1][firstElementPosition.posX] !== this.emptyTile
-        )
-        ||
-        (
-          this.matchedCharProperties.matchedCharIndex === index &&
-          this.board[firstElementPosition.posY + index - 1] &&
-          this.board[firstElementPosition.posY + index - 1][firstElementPosition.posX] &&
-          this.board[firstElementPosition.posY + index - 1][firstElementPosition.posX] !== this.emptyTile
-        )
-      ) {
-        isValid = false;
-      }
-
-      if (
-        (
-          this.matchedCharProperties.matchedCharIndex === index &&
-          this.board[firstElementPosition.posY + index] &&
-          this.board[firstElementPosition.posY + index][firstElementPosition.posX - 1] &&
-          this.board[firstElementPosition.posY + index][firstElementPosition.posX - 1] === this.emptyTile
-        )
-        ||
-        (
-          this.matchedCharProperties.matchedCharIndex === index &&
-          this.board[firstElementPosition.posY + index] &&
-          this.board[firstElementPosition.posY + index][firstElementPosition.posX + 1] &&
-          this.board[firstElementPosition.posY + index][firstElementPosition.posX + 1] === this.emptyTile
-        )
-      ) {
-        isValid = false;
-      }
-    });
-
-    return isValid;
-
-  }
-
-  checkWordSurroundings2() {
-    let isValid = true;
-
-    const firstElementPosition = {
-      posY: this.matchedCharProperties.posY - this.matchedCharProperties.matchedCharIndex,
-      posX: this.matchedCharProperties.posX
-    };
-
-    const lastElementPosition = {
-      posY: firstElementPosition.posY + this.wordToMatch.length - 1,
-      posX: firstElementPosition.posX
-    };
-
-    if (
-      this.board[firstElementPosition.posY - 1] &&
-      this.board[firstElementPosition.posY - 1][firstElementPosition.posX] &&
-      this.board[firstElementPosition.posY - 1][firstElementPosition.posX] !== this.emptyTile
-    ) {
-      isValid = false;
-    }
-
-    if (
-      this.board[lastElementPosition.posY + 1] &&
-      this.board[lastElementPosition.posY + 1][lastElementPosition.posX] &&
-      this.board[lastElementPosition.posY + 1][lastElementPosition.posX] !== this.emptyTile
-    ) {
-      isValid = false;
-    }
-
-    [...this.wordToMatch].forEach((char, index) => {
-      if (
-        this.board[firstElementPosition.posY + index] &&
-        this.matchedCharProperties.matchedCharIndex !== index &&
-        char !== this.board[firstElementPosition.posY + index][firstElementPosition.posX]
-      ) {
+      if (this.board[boardMatchY] && this.board[boardMatchY][boardMatchX]) {
         if (
-          this.board[firstElementPosition.posY + index][firstElementPosition.posX - 1] &&
-          this.board[firstElementPosition.posY + index][firstElementPosition.posX - 1] !== this.emptyTile
+          this.board[boardMatchY][boardMatchX].fillOrientation === this.orientation
         ) {
           isValid = false;
         }
 
         if (
-          this.board[firstElementPosition.posY + index][firstElementPosition.posX + 1] &&
-          this.board[firstElementPosition.posY + index][firstElementPosition.posX + 1] !== this.emptyTile
+          this.board[boardMatchY][boardMatchX].content !== char &&
+          this.board[boardMatchY][boardMatchX].content !== this.emptyTile.content
+        ) {
+          isValid = false;
+        }
+
+        if (
+          this.board[boardMatchY][boardMatchX].content === char &&
+          this.board[boardMatchY][boardMatchX - 1] &&
+          this.board[boardMatchY][boardMatchX - 1].fillOrientation === this.orientation
+        ) {
+          isValid = false;
+        }
+
+        if (
+          this.board[boardMatchY][boardMatchX].content === char &&
+          this.board[boardMatchY][boardMatchX + 1] &&
+          this.board[boardMatchY][boardMatchX + 1].fillOrientation === this.orientation
+        ) {
+          isValid = false;
+        }
+
+        if (
+          this.board[boardMatchY][boardMatchX].content === this.emptyTile.content &&
+          this.board[boardMatchY][boardMatchX - 1] &&
+          this.board[boardMatchY][boardMatchX - 1].content !== this.emptyTile.content
+        ) {
+          isValid = false;
+        }
+
+        if (
+          this.board[boardMatchY][boardMatchX].content === this.emptyTile.content &&
+          this.board[boardMatchY][boardMatchX + 1] &&
+          this.board[boardMatchY][boardMatchX + 1].content !== this.emptyTile.content
         ) {
           isValid = false;
         }
@@ -191,6 +160,7 @@ class CrossBoard {
     });
 
     return isValid;
+
   }
 
   writeBoard() {
@@ -198,34 +168,43 @@ class CrossBoard {
     let lastElementIndex = this.matchedCharProperties.posY + this.wordToMatch.length - 1 - this.matchedCharProperties.matchedCharIndex;
 
     while (firstElementIndex < 0) {
-      let emptyArray = new Array(this.board[0].length).fill(this.emptyTile);
+      let newArray = [];
 
-      this.board.unshift(emptyArray);
+      for (let i = 0; i < this.board[0].length; i++) {
+        let tile = new Tile();
+        newArray.push(tile)
+      }
+
+      this.board.unshift(newArray);
       firstElementIndex++;
       lastElementIndex++;
       this.matchedCharProperties.posY++;
     }
 
     while (lastElementIndex > this.board.length - 1) {
-      let emptyArray = new Array(this.board[0].length).fill(this.emptyTile);
+      let newArray = [];
 
-      this.board.push(emptyArray);
+      for (let i = 0; i < this.board[0].length; i++) {
+        let tile = new Tile();
+        newArray.push(tile)
+      }
+
+      this.board.push(newArray);
     }
 
     [...this.wordToMatch].forEach((char, index) => {
-      this.board[firstElementIndex + index][this.matchedCharProperties.posX] = char;
+      if (this.board[firstElementIndex + index][this.matchedCharProperties.posX].content === char) {
+        this.board[firstElementIndex + index][this.matchedCharProperties.posX].fullFilled = true;
+      } else {
+        this.board[firstElementIndex + index][this.matchedCharProperties.posX].fillOrientation = this.orientation;
+        this.board[firstElementIndex + index][this.matchedCharProperties.posX].content = char;
+      }
     });
-
-    console.log(this.wordToMatch);
-
-    this.output();
-
-    console.log('----------------')
 
     this.matchedCharProperties = {};
   }
 
-  turnRight() {
+  turnBoardRight() {
     const height = this.board.length;
     const width = this.board[0].length;
 
@@ -241,9 +220,11 @@ class CrossBoard {
     }
 
     this.board = rotatedBoard;
+
+    this.orientation = this.horizontal;
   }
 
-  turnLeft() {
+  turnBoardLeft() {
     const height = this.board.length;
     const width = this.board[0].length;
 
@@ -258,6 +239,9 @@ class CrossBoard {
     }
 
     this.board = rotatedBoard;
+
+    this.orientation = this.vertical;
+
   }
 
   generate() {
@@ -267,7 +251,6 @@ class CrossBoard {
 
     do {
       let buffer = [];
-
       let numberOfWords = this.words.length;
 
       for (let i = 0; i < numberOfWords; i++) {
@@ -280,36 +263,36 @@ class CrossBoard {
         if (isMatched) {
           this.writeBoard();
         } else {
-          this.turnRight();
+          this.turnBoardRight();
 
           const isMatchedRotated = this.matchCharacter();
 
           if (isMatchedRotated) {
             this.writeBoard();
-            this.turnLeft();
+            this.turnBoardLeft();
           } else {
             buffer.push(this.wordToMatch);
-            this.turnLeft();
+            this.turnBoardLeft();
           }
         }
       }
 
-      if (this.words.length && buffer.length && buffer.length !== this.words.length) {
-        this.words = [...buffer];
-        console.log(this.words.toString(), 'Buffer')
-      } else {
-        console.log('Niedopasowane : ', buffer.length);
-        console.log('Niedopasowane : ', buffer);
+      if (this.words.length === buffer.length) {
         done = true;
       }
+      this.words = [...buffer];
     } while (!done);
 
-  }
+    const emptyBoardTiles = this.board.map((row) => row.filter((tile) => tile.content === '_'));
+    const emptyBoardTilesFlatten = [].concat.apply([], emptyBoardTiles);
+    const emptyTilesNumber = emptyBoardTilesFlatten.length;
 
-  output() {
-    for (let i = 0; i < this.board.length; i++) {
-      console.log(this.board[i].toString())
-    }
+
+
+    console.log(emptyBoardTilesFlatten)
+
+
+
   }
 
   getBoard() {
