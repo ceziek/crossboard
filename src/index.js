@@ -3,8 +3,6 @@ import './style.css';
 
 function renderBoard() {
 
-  let answers = [];
-
   fetch('/crosswords.json')
     .then((response) => response.json())
     .then(function (json) {
@@ -15,6 +13,8 @@ function renderBoard() {
 
       let board = crossBoard.getBoard();
       let boardContainer = document.querySelector('#crossboard');
+
+      let questions = [];
 
       board.forEach((row) => {
         let boardRow = document.createElement('DIV');
@@ -29,6 +29,12 @@ function renderBoard() {
             boardTile.classList.add('mask');
           }
 
+          if (tile.isFirst) {
+            questions.push(tile.question);
+            boardTile.setAttribute('question', `${questions.length}`);
+            boardTile.classList.add('first-tile');
+          }
+
           boardTile.addEventListener('click', (event) => {
             event.target.classList.remove('mask');
           });
@@ -38,6 +44,21 @@ function renderBoard() {
 
         boardContainer.appendChild(boardRow)
       })
+
+      let questionsContainer = document.getElementById('questions');
+
+      let questionsList = document.createElement('UL');
+
+      questions.forEach((question) => {
+        console.log(question);
+        let questionListElement = document.createElement('LI');
+        questionListElement.innerHTML = question;
+        questionsList.appendChild(questionListElement);
+      });
+
+      questionsContainer.appendChild(questionsList);
+
+
 
     });
 

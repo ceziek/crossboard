@@ -33,8 +33,9 @@ export class CrossBoard {
   getRandomWord() {
     const randomIndex = Math.floor(Math.random() * this.pairs.length);
     const pair = this.pairs[randomIndex];
+    const word = pair.answer;
 
-    this.board[0] = [...pair.answer].map((char) => {
+    this.board[0] = [...word].map((char) => {
       let tile = new Tile();
 
       tile.fillOrientation = this.horizontal;
@@ -203,6 +204,7 @@ export class CrossBoard {
     [...wordToMatch].forEach((char, index) => {
       if(index === 0) {
         this.board[firstElementIndex + index][this.matchedCharProperties.posX].isFirst = true;
+        this.board[firstElementIndex + index][this.matchedCharProperties.posX].question = this.pairToMatch.question
       }
       if (this.board[firstElementIndex + index][this.matchedCharProperties.posX].content === char) {
         this.board[firstElementIndex + index][this.matchedCharProperties.posX].fullFilled = true;
@@ -271,7 +273,6 @@ export class CrossBoard {
         this.pairToMatch = this.pairs[randomIndex];
         this.pairs.splice(randomIndex, 1);
 
-        console.log(randomIndex);
         const isMatched = this.matchCharacter();
 
         if (isMatched) {
