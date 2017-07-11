@@ -1,71 +1,68 @@
 import { CrossBoard } from './CrossBoard';
+import axios from 'axios';
 import './style.css';
 
-function renderBoard() {
+function buildBoard(pairs) {
+  const crossBoard = new CrossBoard(pairs);
+  crossBoard.generate();
 
-  fetch('/crosswords.json')
-    .then((response) => response.json())
-    .then(function (json) {
-      let pairs = json.pairs;
-      let crossBoard = new CrossBoard(pairs);
+  const generatedBoard = crossBoard.getBoard();
+  const boardContainer = document.querySelector('#crossboard');
 
-      crossBoard.generate();
+  let questions = [];
 
-      let board = crossBoard.getBoard();
-      let boardContainer = document.querySelector('#crossboard');
+  generatedBoard.forEach((row) => {
+    let boardRow = document.createElement('DIV');
 
-      let questions = [];
+    row.forEach((tile) => {
+      let boardTile = document.createElement('SPAN');
 
-      board.forEach((row) => {
-        let boardRow = document.createElement('DIV');
+      if (tile.content === crossBoard.emptyTile.content) {
+        boardTile.classList.add('empty')
+      } else {
+        boardTile.innerHTML = tile.content;
+        boardTile.classList.add('mask');
+      }
 
-        row.forEach((tile) => {
-          let boardTile = document.createElement('SPAN');
-          boardTile.innerHTML = tile.content;
+      if (tile.isFirst) {
+        questions.push(tile.questions);
+        boardTile.setAttribute('question', `${questions.length}`);
+        boardTile.classList.add('first-tile');
+      }
 
-          if (boardTile.innerHTML === crossBoard.emptyTile.content) {
-            boardTile.classList.add('empty')
-          } else {
-            boardTile.classList.add('mask');
-          }
-
-          if (tile.isFirst) {
-            questions.push(tile.question);
-            boardTile.setAttribute('question', `${questions.length}`);
-            boardTile.classList.add('first-tile');
-          }
-
-          boardTile.addEventListener('click', (event) => {
-            event.target.classList.remove('mask');
-          });
-
-          boardRow.appendChild(boardTile);
-        });
-
-        boardContainer.appendChild(boardRow)
-      })
-
-      let questionsContainer = document.getElementById('questions');
-
-      let questionsList = document.createElement('UL');
-
-      questions.forEach((question) => {
-        console.log(question);
-        let questionListElement = document.createElement('LI');
-        questionListElement.innerHTML = question;
-        questionsList.appendChild(questionListElement);
+      boardTile.addEventListener('click', (event) => {
+        event.target.classList.remove('mask');
       });
 
-      questionsContainer.appendChild(questionsList);
-
-
-
+      boardRow.appendChild(boardTile);
     });
 
+    boardContainer.appendChild(boardRow)
+  });
 
+  let questionsContainer = document.getElementById('questions');
+  let questionList = document.createElement('UL');
 
+  questions.forEach((questionArray, index) => {
+
+    questionArray.forEach((question) => {
+      let questionListElement = document.createElement('LI');
+      questionListElement.innerHTML = `${index + 1}: ${question}`;
+      questionList.appendChild(questionListElement);
+    });
+  });
+
+  questionsContainer.appendChild(questionList);
 }
 
+function renderBoard() {
+  axios.get('http://localhost:9000/crosswords.json')
+    .then((response) => {
+      let pairs = response.data.pairs;
+      buildBoard(pairs);
+    })
+    .catch((error) => console.log(error));
+}
 
 document.addEventListener('DOMContentLoaded', function () {
   renderBoard();

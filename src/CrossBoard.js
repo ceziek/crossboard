@@ -4,7 +4,7 @@ class Tile {
     this.fillOrientation = '';
     this.fullFilled = false;
     this.isFirst = false;
-    this.question = '';
+    this.questions = [];
   }
 }
 
@@ -14,15 +14,12 @@ export class CrossBoard {
 
     this.board = [];
     this.emptyTile = new Tile();
-    this.pairToMatch = '';
-
-    this.matchedCharProperties = {
-      matchedCharIndex: null,
-      matchedWordLength: null,
-      boardHeight: null,
-      posY: null,
-      posX: null
+    this.pairToMatch = {
+      answer: '',
+      question: ''
     };
+
+    this.matchedCharProperties = {};
 
     this.vertical = 'vertical';
     this.horizontal = 'horizontal';
@@ -35,12 +32,16 @@ export class CrossBoard {
     const pair = this.pairs[randomIndex];
     const word = pair.answer;
 
-    this.board[0] = [...word].map((char) => {
+    this.board[0] = [...word].map((char, index) => {
       let tile = new Tile();
+
+      if (index === 0) {
+        tile.isFirst = true;
+      }
 
       tile.fillOrientation = this.horizontal;
       tile.content = char;
-      tile.question = pair.question;
+      tile.questions.push(pair.question);
 
       return tile;
     });
@@ -49,8 +50,8 @@ export class CrossBoard {
   }
 
   matchCharacter() {
-    this.matchedCharProperties = {};
     let word = this.pairToMatch.answer;
+    this.matchedCharProperties = {};
 
     return this.board.some((row, posY) => {
       return row.some((tile, posX) => {
@@ -95,9 +96,6 @@ export class CrossBoard {
       posY: firstCharPosition.posY + wordToMatch.length - 1,
       posX: firstCharPosition.posX
     };
-
-
-
 
     if (
       this.board[firstCharPosition.posY - 1] &&
@@ -168,19 +166,18 @@ export class CrossBoard {
     });
 
     return isValid;
-
   }
 
   writeBoard() {
-    let wordToMatch = this.pairToMatch.answer;
+    const wordToMatch = this.pairToMatch.answer;
     let firstElementIndex = this.matchedCharProperties.posY - this.matchedCharProperties.matchedCharIndex;
-    let lastElementIndex = this.matchedCharProperties.posY + wordToMatch.length - 1 - this.matchedCharProperties.matchedCharIndex;
+    let lastElementIndex = firstElementIndex + wordToMatch.length - 1;
 
     while (firstElementIndex < 0) {
       let newArray = [];
 
       for (let i = 0; i < this.board[0].length; i++) {
-        let tile = new Tile();
+        const tile = new Tile();
         newArray.push(tile)
       }
 
@@ -194,7 +191,7 @@ export class CrossBoard {
       let newArray = [];
 
       for (let i = 0; i < this.board[0].length; i++) {
-        let tile = new Tile();
+        const tile = new Tile();
         newArray.push(tile)
       }
 
@@ -202,19 +199,24 @@ export class CrossBoard {
     }
 
     [...wordToMatch].forEach((char, index) => {
-      if(index === 0) {
-        this.board[firstElementIndex + index][this.matchedCharProperties.posX].isFirst = true;
-        this.board[firstElementIndex + index][this.matchedCharProperties.posX].question = this.pairToMatch.question
+      let tile = this.board[firstElementIndex + index][this.matchedCharProperties.posX];
+
+      if (index === 0 && tile.isFirst) {
+        tile.questions.push(this.pairToMatch.question);
       }
-      if (this.board[firstElementIndex + index][this.matchedCharProperties.posX].content === char) {
-        this.board[firstElementIndex + index][this.matchedCharProperties.posX].fullFilled = true;
+
+      if (index === 0 && !tile.isFirst) {
+        tile.isFirst = true;
+        tile.questions.push(this.pairToMatch.question);
+      }
+
+      if (tile.content === char) {
+        tile.fullFilled = true;
       } else {
-        this.board[firstElementIndex + index][this.matchedCharProperties.posX].fillOrientation = this.orientation;
-        this.board[firstElementIndex + index][this.matchedCharProperties.posX].content = char;
+        tile.fillOrientation = this.orientation;
+        tile.content = char;
       }
     });
-
-    this.matchedCharProperties = {};
   }
 
   turnBoardRight() {
@@ -233,7 +235,6 @@ export class CrossBoard {
     }
 
     this.board = rotatedBoard;
-
     this.orientation = this.horizontal;
   }
 
@@ -252,21 +253,18 @@ export class CrossBoard {
     }
 
     this.board = rotatedBoard;
-
     this.orientation = this.vertical;
-
   }
 
   generate() {
     let done = false;
-
     const pairs = this.pairs;
 
     this.getRandomWord();
 
     do {
       let buffer = [];
-      let numberOfPairs = this.pairs.length;
+      const numberOfPairs = this.pairs.length;
 
       for (let i = 0; i < numberOfPairs; i++) {
         const randomIndex = Math.floor(Math.random() * this.pairs.length);
@@ -298,9 +296,7 @@ export class CrossBoard {
       this.pairs = [...buffer];
     } while (!done);
 
-
     this.pairs = pairs;
-
   }
 
   getBoard() {

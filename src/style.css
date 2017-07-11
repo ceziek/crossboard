@@ -42,8 +42,11 @@
     font-size: 12px;
 }
 
+#questions {
+    display: inline-block;
+    vertical-align: top;
+}
+
 #questions ul {
-
-    list-style: decimal;
-
+    list-style: none;
 }
