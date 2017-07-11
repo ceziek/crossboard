@@ -3,16 +3,18 @@ class Tile {
     this.content = '_';
     this.fillOrientation = '';
     this.fullFilled = false;
+    this.isFirst = false;
+    this.question = '';
   }
 }
 
-class CrossBoard {
-  constructor(words) {
-    this.words = words;
+export class CrossBoard {
+  constructor(pairs) {
+    this.pairs = pairs;
 
     this.board = [];
     this.emptyTile = new Tile();
-    this.wordToMatch = '';
+    this.pairToMatch = '';
 
     this.matchedCharProperties = {
       matchedCharIndex: null,
@@ -29,23 +31,25 @@ class CrossBoard {
   }
 
   getRandomWord() {
-    const randomIndex = Math.floor(Math.random() * this.words.length);
-    const wordArray = [...this.words[randomIndex]];
+    const randomIndex = Math.floor(Math.random() * this.pairs.length);
+    const pair = this.pairs[randomIndex];
 
-    this.board[0] = wordArray.map((char) => {
+    this.board[0] = [...pair.answer].map((char) => {
       let tile = new Tile();
 
       tile.fillOrientation = this.horizontal;
       tile.content = char;
+      tile.question = pair.question;
 
       return tile;
     });
 
-    this.words.splice(randomIndex, 1);
+    this.pairs.splice(randomIndex, 1);
   }
 
   matchCharacter() {
     this.matchedCharProperties = {};
+    let word = this.pairToMatch.answer;
 
     return this.board.some((row, posY) => {
       return row.some((tile, posX) => {
@@ -58,13 +62,13 @@ class CrossBoard {
           return false;
         }
 
-        return [...this.wordToMatch].some((char, index) => {
+        return [...word].some((char, index) => {
 
           if (tile.content === char) {
             this.matchedCharProperties = {
               matchedChar: char,
               matchedCharIndex: index,
-              matchedWordLength: this.wordToMatch.length,
+              matchedWordLength: word.length,
               boardHeight: this.board.length,
               posY: posY,
               posX: posX
@@ -79,6 +83,7 @@ class CrossBoard {
 
   checkWordSurroundings() {
     let isValid = true;
+    let wordToMatch = this.pairToMatch.answer;
 
     const firstCharPosition = {
       posY: this.matchedCharProperties.posY - this.matchedCharProperties.matchedCharIndex,
@@ -86,9 +91,11 @@ class CrossBoard {
     };
 
     const lastCharPosition = {
-      posY: firstCharPosition.posY + this.wordToMatch.length - 1,
+      posY: firstCharPosition.posY + wordToMatch.length - 1,
       posX: firstCharPosition.posX
     };
+
+
 
 
     if (
@@ -107,7 +114,7 @@ class CrossBoard {
       isValid = false;
     }
 
-    [...this.wordToMatch].forEach((char, index) => {
+    [...wordToMatch].forEach((char, index) => {
       let boardMatchY = firstCharPosition.posY + index;
       let boardMatchX = firstCharPosition.posX;
 
@@ -164,8 +171,9 @@ class CrossBoard {
   }
 
   writeBoard() {
+    let wordToMatch = this.pairToMatch.answer;
     let firstElementIndex = this.matchedCharProperties.posY - this.matchedCharProperties.matchedCharIndex;
-    let lastElementIndex = this.matchedCharProperties.posY + this.wordToMatch.length - 1 - this.matchedCharProperties.matchedCharIndex;
+    let lastElementIndex = this.matchedCharProperties.posY + wordToMatch.length - 1 - this.matchedCharProperties.matchedCharIndex;
 
     while (firstElementIndex < 0) {
       let newArray = [];
@@ -192,7 +200,10 @@ class CrossBoard {
       this.board.push(newArray);
     }
 
-    [...this.wordToMatch].forEach((char, index) => {
+    [...wordToMatch].forEach((char, index) => {
+      if(index === 0) {
+        this.board[firstElementIndex + index][this.matchedCharProperties.posX].isFirst = true;
+      }
       if (this.board[firstElementIndex + index][this.matchedCharProperties.posX].content === char) {
         this.board[firstElementIndex + index][this.matchedCharProperties.posX].fullFilled = true;
       } else {
@@ -247,17 +258,20 @@ class CrossBoard {
   generate() {
     let done = false;
 
+    const pairs = this.pairs;
+
     this.getRandomWord();
 
     do {
       let buffer = [];
-      let numberOfWords = this.words.length;
+      let numberOfPairs = this.pairs.length;
 
-      for (let i = 0; i < numberOfWords; i++) {
-        const randomIndex = Math.floor(Math.random() * this.words.length);
-        this.wordToMatch = this.words[randomIndex];
-        this.words.splice(randomIndex, 1);
+      for (let i = 0; i < numberOfPairs; i++) {
+        const randomIndex = Math.floor(Math.random() * this.pairs.length);
+        this.pairToMatch = this.pairs[randomIndex];
+        this.pairs.splice(randomIndex, 1);
 
+        console.log(randomIndex);
         const isMatched = this.matchCharacter();
 
         if (isMatched) {
@@ -271,27 +285,20 @@ class CrossBoard {
             this.writeBoard();
             this.turnBoardLeft();
           } else {
-            buffer.push(this.wordToMatch);
+            buffer.push(this.pairToMatch);
             this.turnBoardLeft();
           }
         }
       }
 
-      if (this.words.length === buffer.length) {
+      if (this.pairs.length === buffer.length) {
         done = true;
       }
-      this.words = [...buffer];
+      this.pairs = [...buffer];
     } while (!done);
 
-    const emptyBoardTiles = this.board.map((row) => row.filter((tile) => tile.content === '_'));
-    const emptyBoardTilesFlatten = [].concat.apply([], emptyBoardTiles);
-    const emptyTilesNumber = emptyBoardTilesFlatten.length;
 
-
-
-    console.log(emptyBoardTilesFlatten)
-
-
+    this.pairs = pairs;
 
   }
 

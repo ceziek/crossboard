@@ -14,6 +14,20 @@
     border: 1px solid black;
 }
 
+#crossboard .mask{
+    position: relative;
+}
+
+#crossboard .mask:before {
+    position: absolute;
+    content: '';
+    background: white;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
 #crossboard span.empty {
    background: black;
 }
