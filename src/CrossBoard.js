@@ -37,11 +37,11 @@ export class CrossBoard {
 
       if (index === 0) {
         tile.isFirst = true;
+        tile.questions.push(pair.question);
       }
 
       tile.fillOrientation = this.horizontal;
       tile.content = char;
-      tile.questions.push(pair.question);
 
       return tile;
     });
@@ -201,13 +201,14 @@ export class CrossBoard {
     [...wordToMatch].forEach((char, index) => {
       let tile = this.board[firstElementIndex + index][this.matchedCharProperties.posX];
 
-      if (index === 0 && tile.isFirst) {
+     /* if (index === 0 && tile.isFirst) {
         tile.questions.push(this.pairToMatch.question);
-      }
+      }*/
 
-      if (index === 0 && !tile.isFirst) {
+      if (index === 0) {
         tile.isFirst = true;
         tile.questions.push(this.pairToMatch.question);
+        console.log(tile.questions);
       }
 
       if (tile.content === char) {
